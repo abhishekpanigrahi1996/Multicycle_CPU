@@ -1,0 +1,218 @@
+
+# Group 25
+# Abhishek Panigrahi  : Roll 14CS10001
+# Shashank Srivastava : Roll 14CS10042
+
+
+# Below RTL-micro operations remains same for all the instructions and is the FETCH phase of each instruction
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+FETCH INSTRUCTION
+-----------------------------------------------------------------------------------------------------------------------------------------
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , IR <= D_bus );
+
+# Now RTL-micro operations for EXECUTE phase of different instructions
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+1) LOAD
+-----------------------------------------------------------------------------------------------------------------------------------------
+a) LOAD_IMMEDIATE
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( regbank[IR[Rdst]] <= MDR );
+
+b) LOAD_REGISTER
+
+	( regbank[IR[Rdst]] <= regbank[IR[rb]] );
+
+c) LOAD_BASE_INDEXED	
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( regbank[IR[Rdst]] <= MDR );
+
+d) LOAD_INDIRECT
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( MAR <= MDR );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( regbank[IR[Rdst]] <= MDR );
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+2) ALU operations
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+#  fnsel = {add,sub,and,or}
+
+a) fnsel_IMMDEIATE
+
+    ( MAR <= PC , buffer <= PC );
+    ( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+    ( buffer <= regbank[IR[Rdst]] );
+    ( regbank[IR[Rdst]] <= buffer fnsel MDR , ldbranch <= 1 );
+
+b) fnsel_REGISTER
+
+	( buffer <= regbank[IR[Rdst]] );
+	( regbank[IR[Rdst]] <= buffer fnsel regbank[IR[rb]] , ldbranch <= 1 );
+
+c) fnsel_BASE_INDEXED
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( buffer <= regbank[IR[Rdst]] );
+    ( regbank[IR[Rdst]] <= buffer fnsel MDR , ldbranch <= 1 );
+
+d) fnsel_INDIRECT
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( MAR <= MDR );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( buffer <= regbank[IR[Rdst]] );
+    ( regbank[IR[Rdst]] <= buffer fnsel  MDR , ldbranch <= 1 );
+
+
+
+e) mns_IMMDEIATE
+
+    ( MAR <= PC , buffer <= PC );
+    ( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+    ( buffer <= regbank[IR[Rdst]] );
+    ( z <= buffer - MDR , ldbranch <= 1 );
+
+f) mns_REGISTER
+
+	( buffer <= regbank[IR[Rdst]] );
+	( z <= buffer - regbank[IR[rb]] , ldbranch <= 1 );
+
+g) mns_BASE_INDEXED
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( buffer <= regbank[IR[Rdst]] );
+    ( z <= buffer - MDR , ldbranch <= 1 );
+
+h) mns_INDIRECT
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( MAR <= MDR );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( buffer <= regbank[IR[Rdst]] );
+    ( z <= buffer - MDR , ldbranch <= 1 );
+
+i) cmp
+
+	( regbank[IR[Rdst]] <= 2c(regbank[IR[Rdst]]) );      #  2c means 2's-complement of register Rdst
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+3) JUMP operations
+-----------------------------------------------------------------------------------------------------------------------------------------
+a)  JUMP_unconditional
+	
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );       # MDR stores offset
+	( buffer <= MDR );
+	( PC <= buffer + PC);
+
+b)  JUMP_cond              
+# cond = { zero (Z), notZero (nZ), carry (C), notCarry (nC), Overflow (V), notOverflow (nV) ,sign (S) , notSign(nS) }
+	
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );  
+	
+	if(!D_cond)
+	{
+		( buffer <= MDR );
+	    ( PC <= buffer + PC);
+	}
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+4) Subroutine call and return
+-----------------------------------------------------------------------------------------------------------------------------------------
+a)  JUMP_AND_LINK (JAL)
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus ); 
+	( regbank[IR[Rdst]] <= PC );
+	( buffer <= MDR );
+	( PC <= buffer + PC);
+
+b) JUMP_REGISTER (JR)
+
+	( PC <= regbank[IR[Rdst]] );
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+5) STORE
+-----------------------------------------------------------------------------------------------------------------------------------------
+a) STORE_BASE_INDEXED
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( MDR <= IR[regbank[Rdst]] );
+    ( Abus <= MAR , wt <= 1 );
+
+b) STORE_INDIRECT
+
+	( MAR <= PC , buffer <= PC );
+	( PC <= buffer + 2 , Abus <= MAR , rd <= 1 , MDR <= D_bus );
+	( T <= MDR );
+	( buffer <= regbank[IR[rb]] );
+	( MDR <= regbank[IR[rx]] + buffer );
+    ( buffer <= T );
+    ( MAR <= MDR + buffer );
+    ( Abus <= MAR , rd <= 1 , MDR <= D_bus);
+    ( MAR <= MDR );
+    ( MDR <= IR[regbank[Rdst]] );
+    ( Abus <= MAR , wt <= 1 );
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+

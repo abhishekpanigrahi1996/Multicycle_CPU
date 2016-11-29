@@ -1,0 +1,226 @@
+
+# Group 25
+# Abhishek Panigrahi  : Roll 14CS10001
+# Shashank Srivastava : Roll 14CS10042
+
+
+# Below control level instructions remain same for all the instructions and constitute the FETCH phase of each instruction
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+FETCH INSTRUCTION
+-----------------------------------------------------------------------------------------------------------------------------------------
+	( TPC, transx, ldMAR, ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, ldIR );
+
+# Now RTL-micro operations for EXECUTE phase of different instructions
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+1) LOAD
+-----------------------------------------------------------------------------------------------------------------------------------------
+a) LOAD_IMMEDIATE
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, wR );
+
+b) LOAD_REGISTER
+
+	( rdR, sel1 = 01, transx, wR );
+
+c) LOAD_BASE_INDEXED	
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp );
+	( sel1 = 01, rdR, ldbuf);
+	( sel1 = 00, rdR, add, rMDRi, ldMDR );
+    ( Ttemp, ldbuf );
+    ( TMDR2X, add, ldMAR);
+    ( TMAR, rd, rMDRX, ldMDR);
+    ( TMDR2X, transx, wR );
+
+d) LOAD_INDIRECT
+
+	
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp );
+	( sel1 = 01, rdR, ldbuf);
+	( sel1 = 00, rdR, add, rMDRi, ldMDR );
+    ( Ttemp, ldbuf );
+    ( TMDR2X, add, ldMAR);
+    ( TMAR, rd, rMDRX, ldMDR);
+    ( TMDR2X, transx, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR);
+    ( TMDR2X, transx, wR );
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+2) ALU operations
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+#  fnsel = {add,sub,and,or}
+
+a) fnsel_IMMDEIATE
+
+    ( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( sel1 = 10, rdR, ldbuf );
+	( TMDR2X, ldbranch, wR );
+    
+
+b) fnsel_REGISTER
+	
+	( sel1 = 10, rdR, ldbuf );
+	( sel1 = 01, rdR, wR, ldbranch);
+
+c) fnsel_BASE_INDEXED
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp);
+	( sel1 = 00, rdR, ldbuf);
+	( sel1 = 01, rdR, add, rMDRi, ldMDR );
+	( Ttemp, ldbuf);
+    ( TMDR2X, add, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR );
+    ( sel1 = 10, ldbuf);
+    ( TMDR2X, wR, ldbranch );
+
+d) fnsel_INDIRECT
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp);
+	( sel1 = 01, rdR, ldbuf);
+	( sel1 = 00, rdR, add, rMDRi, ldMDR );
+    ( Ttemp, ldbuf );
+    ( TMDR2X, add, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR );
+    ( TMDR2X, transx, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR );
+    ( sel1 = 10, ldbuf);
+    ( TMDR2X, wR, ldbranch );
+
+  
+
+e) mns_IMMDEIATE
+
+    ( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( sel1 = 10, rdR, ldbuf );
+	( TMDR2X, ldbranch );
+
+f) mns_REGISTER
+
+	( sel1 = 10, rdR, ldbuf );
+	( sel1 = 01, rdR, ldbranch);
+
+g) mns_BASE_INDEXED
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp);
+	( sel1 = 00, rdR, ldbuf);
+	( sel1 = 01, rdR, add, rMDRi, ldMDR );
+	( Ttemp, ldbuf);
+    ( TMDR2X, add, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR );
+    ( sel1 = 10, ldbuf);
+    ( TMDR2X, ldbranch );
+
+
+h) mns_INDIRECT
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp);
+	( sel1 = 01, rdR, ldbuf);
+	( sel1 = 00, rdR, add, rMDRi, ldMDR );
+    ( Ttemp, ldbuf );
+    ( TMDR2X, add, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR );
+    ( TMDR2X, transx, ldMAR );
+    ( TMAR, rd, rMDRX, ldMDR );
+    ( sel1 = 10, ldbuf);
+    ( TMDR2X, ldbranch );
+
+
+i) cmp
+
+	( sel1 = 10, rdR );
+	( wR );
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+3) JUMP operations
+-----------------------------------------------------------------------------------------------------------------------------------------
+a)  JUMP_unconditional
+	
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, ldbuf );
+	( TPC, add, ldPC );
+
+b)  JUMP_cond              
+# cond = { zero (Z), notZero (nZ), carry (C), notCarry (nC), Overflow (V), notOverflow (nV) ,sign (S) , notSign(nS) }
+
+
+	( TPC, transx ,ldMAR ,ldbuf );	
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	
+	
+	if(D_cond)
+	{
+		( TMDR2X, ldbuf );
+		( TPC,add, ldPC );
+	}
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+4) Subroutine call and return
+-----------------------------------------------------------------------------------------------------------------------------------------
+a)  JUMP_AND_LINK (JAL)
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TPC, transx, wR );
+	( TMDR2X, ldbuf );
+	( TPC, add, ldPC );
+
+b) JUMP_REGISTER (JR)
+
+	( sel1 = 10, rdR, transx, ldPC );
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+5) STORE
+-----------------------------------------------------------------------------------------------------------------------------------------
+a) STORE_BASE_INDEXED
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp);
+	( sel1 = 01, rdR, ldbuf );
+	( sel1 = 00, rdR, add, rMDRi, ldMDR );
+	( Ttemp, ldbuf );
+	( TMDR2X, add, ldMAR );
+    ( sel1 = 10, rdR, transx, rMDRi, ldMDR );
+    ( TMAR, TMDR, wr );
+
+b) STORE_INDIRECT
+
+	( TPC, transx,ldMAR ,ldbuf );
+	( Tr2, add, ldPC, TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldTemp );
+	( sel1 = 01, rdR, ldbuf );
+	( sel1 = 00, rdR, add, rMDRi, ldMDR );
+	( Ttemp, ldbuf );
+	( TMDR2X, add, ldMAR );
+	( TMAR, rd, rMDRX, ldMDR );
+	( TMDR2X, transx, ldMAR);
+   	( sel1 = 10, rdR, transx, rMDRi, ldMDR );
+    ( TMAR, TMDR, wr );
+   
+
+-----------------------------------------------------------------------------------------------------------------------------------------
